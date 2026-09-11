@@ -94,6 +94,13 @@ input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-
 <div class="notice">※ 이 게임은 재미를 위한 가상 코인 게임이며 실제 금전 거래나 현금화 기능이 없습니다.</div>
 </div>
 
+<div class="modal" id="accountModal">
+  <div class="modal-card">
+    <div class="modal-head"><h2 id="accountTitle">로그인</h2><button class="close" onclick="closeAccount()">닫기</button></div>
+    <div id="authArea"></div>
+  </div>
+</div>
+
 <script>
 const USERS_KEY='formwheel_casino_users_v1';
 const SESSION_KEY='formwheel_casino_session_v1';
