@@ -60,6 +60,8 @@ input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-
 .auth-switch button{border:0;background:none;color:#9a7415;font-weight:900;cursor:pointer}
 .user-info{padding:12px;border-radius:14px;background:#f5f6f9;margin-bottom:12px}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="app">
@@ -102,33 +104,54 @@ input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-
 </div>
 
 <script>
-const USERS_KEY='formwheel_casino_users_v1';
-const SESSION_KEY='formwheel_casino_session_v1';
-let users=JSON.parse(localStorage.getItem(USERS_KEY)||'{}');
-let currentUser=localStorage.getItem(SESSION_KEY)||'';
-let state=null;
+const firebaseConfig = {
+  apiKey: "AIzaSyBreTSe1m0-xlbF4aupnU5isRZCihR25IE",
+  authDomain: "formwheel.firebaseapp.com",
+  databaseURL: "https://formwheel-default-rtdb.firebaseio.com",
+  projectId: "formwheel",
+  storageBucket: "formwheel.firebasestorage.app",
+  messagingSenderId: "431583088241",
+  appId: "1:431583088241:web:74e0e34ea1e3e1170c55d0"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-function loadAccount(){
-  if(currentUser && users[currentUser]){
-    state=users[currentUser];
-    const today=new Date().toISOString().slice(0,10);
-    if(state.lastDaily!==today){
-      state.coins+=100;
-      state.lastDaily=today;
-      save();
+const SESSION_KEY='formwheel_casino_session_v1';
+let currentUser=localStorage.getItem(SESSION_KEY)||'';
+let state={coins:100,lastDaily:new Date().toISOString().slice(0,10)};
+
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
+async function loadAccount(){
+  if(currentUser){
+    try{
+      const snap=await db.ref('users/'+currentUser).once('value');
+      const data=snap.val();
+      if(data){
+        state=data;
+        const today=todayStr();
+        if(state.lastDaily!==today){
+          state.coins+=100;
+          state.lastDaily=today;
+          await save();
+        }
+      }else{
+        currentUser='';localStorage.removeItem(SESSION_KEY);
+        state={coins:100,lastDaily:todayStr()};
+      }
+    }catch(e){
+      console.error('계정을 불러오지 못했습니다:',e);
     }
-  }else{
-    state={coins:100,lastDaily:new Date().toISOString().slice(0,10)};
   }
   renderAccount();
   document.getElementById('coins').textContent=state.coins;
 }
-function save(){
-  if(currentUser){
-    users[currentUser]=state;
-    localStorage.setItem(USERS_KEY,JSON.stringify(users));
-  }
+async function save(){
   document.getElementById('coins').textContent=state.coins;
+  if(currentUser){
+    try{await db.ref('users/'+currentUser).set(state);}
+    catch(e){console.error('저장 실패:',e);}
+  }
 }
 function renderAccount(){
   const btn=document.getElementById('accountBtn');
@@ -156,34 +179,57 @@ function renderAuth(mode){
   area.innerHTML=`<div class="auth-form">
     <input id="authUser" autocomplete="username" placeholder="아이디" maxlength="20">
     <input id="authPass" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="비밀번호" maxlength="40">
-    <button class="btn" onclick="${mode==='login'?'login()':'signup()'}">${mode==='login'?'로그인':'회원가입'}</button>
+    <button class="btn" id="authSubmit" onclick="${mode==='login'?'login()':'signup()'}">${mode==='login'?'로그인':'회원가입'}</button>
   </div>
   <div class="auth-switch">${mode==='login'?'계정이 없나요?':'이미 계정이 있나요?'}
     <button onclick="renderAuth('${mode==='login'?'signup':'login'}')">${mode==='login'?'회원가입':'로그인'}</button>
   </div>`;
 }
 function cleanUser(v){return v.trim().toLowerCase();}
-function signup(){
+function setAuthBusy(busy,label){
+  const btn=document.getElementById('authSubmit');
+  if(!btn)return;
+  btn.disabled=busy;
+  if(busy)btn.dataset.label=btn.textContent,btn.textContent=label||'처리 중...';
+  else if(btn.dataset.label)btn.textContent=btn.dataset.label;
+}
+async function signup(){
   const u=cleanUser(document.getElementById('authUser').value),p=document.getElementById('authPass').value;
   if(!/^[a-zA-Z0-9_]{3,20}$/.test(u)){alert('아이디는 영문, 숫자, _를 사용해 3~20자로 입력해주세요.');return;}
   if(p.length<4){alert('비밀번호는 4자 이상 입력해주세요.');return;}
-  if(users[u]){alert('이미 존재하는 아이디입니다.');return;}
-  users[u]={coins:100,lastDaily:new Date().toISOString().slice(0,10),password:p};
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
-  currentUser=u;localStorage.setItem(SESSION_KEY,u);state=users[u];save();renderAccount();closeAccount();
-  alert('회원가입 완료! 🎉 오늘의 100코인이 지급되었습니다.');
+  setAuthBusy(true);
+  try{
+    const snap=await db.ref('users/'+u).once('value');
+    if(snap.exists()){alert('이미 존재하는 아이디입니다.');return;}
+    const newUser={coins:100,lastDaily:todayStr(),password:p};
+    await db.ref('users/'+u).set(newUser);
+    currentUser=u;localStorage.setItem(SESSION_KEY,u);state=newUser;
+    renderAccount();closeAccount();
+    document.getElementById('coins').textContent=state.coins;
+    alert('회원가입 완료! 🎉 오늘의 100코인이 지급되었습니다.');
+  }catch(e){
+    console.error(e);alert('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }finally{setAuthBusy(false);}
 }
-function login(){
+async function login(){
   const u=cleanUser(document.getElementById('authUser').value),p=document.getElementById('authPass').value;
-  if(!users[u] || users[u].password!==p){alert('아이디 또는 비밀번호가 올바르지 않습니다.');return;}
-  currentUser=u;localStorage.setItem(SESSION_KEY,u);state=users[u];
-  const today=new Date().toISOString().slice(0,10);
-  if(state.lastDaily!==today){state.coins+=100;state.lastDaily=today;}
-  save();renderAccount();closeAccount();
+  setAuthBusy(true,'로그인 중...');
+  try{
+    const snap=await db.ref('users/'+u).once('value');
+    const data=snap.val();
+    if(!data || data.password!==p){alert('아이디 또는 비밀번호가 올바르지 않습니다.');return;}
+    currentUser=u;localStorage.setItem(SESSION_KEY,u);state=data;
+    const today=todayStr();
+    if(state.lastDaily!==today){state.coins+=100;state.lastDaily=today;}
+    await save();
+    renderAccount();closeAccount();
+  }catch(e){
+    console.error(e);alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }finally{setAuthBusy(false);}
 }
 function logout(){
   currentUser='';localStorage.removeItem(SESSION_KEY);
-  state={coins:100,lastDaily:new Date().toISOString().slice(0,10)};
+  state={coins:100,lastDaily:todayStr()};
   renderAccount();document.getElementById('coins').textContent=state.coins;closeAccount();
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
