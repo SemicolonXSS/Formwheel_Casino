@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fc">
+<title>FormWheel Casino</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f8fc;color:#17181c}
+button{font:inherit}
+a{text-decoration:none;color:inherit}
+.app{max-width:1050px;margin:auto;padding:18px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 22px}
+.logo{font-weight:900;font-size:22px;cursor:pointer}
+.logo span{color:#d9a441}
+.balance{background:#ffffff;border:1px solid #e2e4ea;border-radius:999px;padding:9px 14px;font-weight:800}
+.coin{color:#ffd66b}
+.hero{background:#ffffff;border:1px solid #e2e4ea;border-radius:26px;padding:30px;margin-bottom:18px}
+.eyebrow{font-size:13px;color:#d9a441;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:42px;line-height:1.05;margin:8px 0}
+.hero p{color:#666b78;margin:0;max-width:650px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#ffffff;border:1px solid #e2e4ea;border-radius:22px;padding:22px;min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
+.icon{font-size:38px}
+.card h2{margin:10px 0 5px;font-size:21px}
+.card p{color:#666b78;font-size:14px;margin:0}
+.btn{border:0;border-radius:13px;padding:12px 15px;font-weight:900;cursor:pointer;background:#e5b94d;color:#151515;margin-top:16px}
+.btn.secondary{background:#282c37;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.panel{display:none;background:#ffffff;border:1px solid #e2e4ea;border-radius:22px;padding:24px;margin-top:18px}
+.panel.active{display:block}
+.panelhead{display:flex;justify-content:space-between;gap:15px;align-items:center}
+.panelhead h2{margin:0}
+.close{background:#eef0f4;color:#30333b;border:0;border-radius:10px;padding:9px 12px;cursor:pointer}
+.status{text-align:center;font-size:24px;font-weight:900;margin:20px 0}
+.wheel{width:240px;height:240px;border-radius:50%;margin:10px auto 20px;border:9px solid #d6b04d;background:conic-gradient(#b63838 0 12.5%,#e9ebf0 12.5% 25%,#b63838 25% 37.5%,#e9ebf0 37.5% 50%,#b63838 50% 62.5%,#e9ebf0 62.5% 75%,#b63838 75% 87.5%,#e9ebf0 87.5% 100%);display:grid;place-items:center;box-shadow:0 0 0 5px #2b2e38,0 12px 35px #0008}
+.wheel span{width:70px;height:70px;background:#f1cf69;color:#16171c;border-radius:50%;display:grid;place-items:center;font-weight:1000}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-radius:11px;padding:11px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:430px;margin:15px auto}
+.choice button{padding:15px;border:1px solid #e0e2e8;background:#f5f6f9;color:#20232b;border-radius:14px;font-weight:900;cursor:pointer}
+.cards{display:flex;justify-content:center;gap:12px;margin:20px 0}
+.playcard{width:80px;height:112px;border-radius:12px;background:#f5f5f5;color:#171717;display:grid;place-items:center;font-size:30px;font-weight:900}
+.rules{color:#666b78;font-size:13px;line-height:1.6;margin-top:18px}
+.notice{margin-top:15px;color:#858b98;font-size:12px;text-align:center}
+@media(max-width:750px){.grid{grid-template-columns:1fr 1fr}h1{font-size:34px}}
+@media(max-width:500px){.app{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:24px}.card{min-height:170px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="logo" onclick="location.href='https://semicolonxss.github.io/Formwheel/'">Form<span>Wheel</span></div>
+  <div class="balance">🪙 <span class="coin" id="coins">100</span> Coins</div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">FormWheel Games</div>
+  <h1>🎰 Casino</h1>
+  <p>친구들과 가상 코인으로 즐기는 미니 카지노. 매일 100코인을 받아 게임을 시작하세요.</p>
+</section>
+
+<section class="grid">
+  <article class="card"><div><div class="icon">🎡</div><h2>Roulette</h2><p>숫자와 색을 골라 룰렛을 돌려보세요.</p></div><button class="btn" onclick="openGame('roulette')">Play</button></article>
+  <article class="card"><div><div class="icon">🃏</div><h2>Blackjack</h2><p>21에 가까워지도록 카드를 받아보세요.</p></div><button class="btn" onclick="openGame('blackjack')">Play</button></article>
+  <article class="card"><div><div class="icon">🎲</div><h2>Dice</h2><p>주사위의 합을 맞혀보세요.</p></div><button class="btn" onclick="openGame('dice')">Play</button></article>
+  <article class="card"><div><div class="icon">🪙</div><h2>Coin Flip</h2><p>앞면 또는 뒷면을 선택하세요.</p></div><button class="btn" onclick="openGame('coin')">Play</button></article>
+  <article class="card"><div><div class="icon">⬆️</div><h2>High & Low</h2><p>다음 카드가 높을지 낮을지 예측하세요.</p></div><button class="btn" onclick="openGame('highlow')">Play</button></article>
+  <article class="card"><div><div class="icon">🏆</div><h2>Jackpot</h2><p>행운을 시험하는 간단한 슬롯 게임입니다.</p></div><button class="btn" onclick="openGame('jackpot')">Play</button></article>
+</section>
+
+<section id="game" class="panel">
+  <div class="panelhead"><h2 id="gameTitle">Game</h2><button class="close" onclick="closeGame()">닫기</button></div>
+  <div id="gameBody"></div>
+</section>
+
+<div class="notice">※ 이 게임은 재미를 위한 가상 코인 게임이며 실제 금전 거래나 현금화 기능이 없습니다.</div>
+</div>
+
+<script>
+const KEY='formwheel_casino_state_v1';
+let state=JSON.parse(localStorage.getItem(KEY)||'null');
+const today=new Date().toISOString().slice(0,10);
+if(!state){state={coins:100,lastDaily:today};}
+if(state.lastDaily!==today){state.coins+=100;state.lastDaily=today;save();}
+document.getElementById('coins').textContent=state.coins;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(state));document.getElementById('coins').textContent=state.coins;}
+function spend(n){if(!Number.isInteger(n)||n<1||state.coins<n){alert('코인이 부족합니다!');return false;}state.coins-=n;save();return true;}
+function add(n){state.coins+=n;save();}
+function openGame(type){
+ document.getElementById('game').classList.add('active');
+ const titles={roulette:'🎡 Roulette',blackjack:'🃏 Blackjack',dice:'🎲 Dice',coin:'🪙 Coin Flip',highlow:'⬆️ High & Low',jackpot:'🏆 Jackpot'};
+ document.getElementById('gameTitle').textContent=titles[type];
+ const body=document.getElementById('gameBody');
+ if(type==='roulette') roulette(body);
+ if(type==='blackjack') blackjack(body);
+ if(type==='dice') dice(body);
+ if(type==='coin') coin(body);
+ if(type==='highlow') highlow(body);
+ if(type==='jackpot') jackpot(body);
+ document.getElementById('game').scrollIntoView({behavior:'smooth'});
+}
+function closeGame(){document.getElementById('game').classList.remove('active');}
+
+function betBox(defaultBet=10){
+ return `<div class="controls"><input id="bet" type="number" min="1" value="${defaultBet}"><span style="align-self:center;color:#aaa">코인 베팅</span></div>`;
+}
+function roulette(el){
+ el.innerHTML=`<div class="status" id="rmsg">베팅하고 룰렛을 돌리세요</div><div class="wheel" id="wheel"><span>FORM</span></div>
+ ${betBox()}<div class="choice"><button onclick="spinRoulette('red')">🔴 Red ×2</button><button onclick="spinRoulette('black')">⚫ Black ×2</button><button onclick="spinRoulette('even')">짝수 ×2</button><button onclick="spinRoulette('odd')">홀수 ×2</button></div>
+ <div class="rules">룰렛은 0~36 중 하나가 랜덤으로 선택됩니다. 당첨 시 베팅 금액의 2배를 받습니다.</div>`;
+}
+function spinRoulette(choice){
+ const bet=+document.getElementById('bet').value;if(!spend(bet))return;
+ const n=Math.floor(Math.random()*37),red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+ const win=choice==='red'?red.includes(n):choice==='black'?n!==0&&!red.includes(n):choice==='even'?n!==0&&n%2===0:n!==0&&n%2===1;
+ document.getElementById('rmsg').textContent=`🎯 ${n} — ${win?'🎉 당첨! +'+bet+' 코인':'😢 아쉽네요. -'+bet+' 코인'}`;
+ if(win)add(bet*2);
+}
+function blackjack(el){
+ el.innerHTML=`<div class="status" id="bmsg">베팅 후 Deal!</div><div class="cards" id="bcards"></div>${betBox(20)}
+ <div class="controls"><button class="btn" onclick="dealBJ()">Deal</button><button class="btn secondary" id="hit" onclick="hitBJ()" disabled>Hit</button><button class="btn secondary" id="stand" onclick="standBJ()" disabled>Stand</button></div>
+ <div class="rules">간단한 싱글플레이 블랙잭입니다. 21에 가까운 쪽이 승리하며, 블랙잭은 2.5배 지급됩니다.</div>`;
+ window.bj={active:false,player:[],dealer:[]};
+}
+const deckRanks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+function card(){return deckRanks[Math.floor(Math.random()*deckRanks.length)];}
+function val(cards){let s=0,a=0;cards.forEach(c=>{if(c==='A'){s+=11;a++}else s+=isNaN(+c)?10:+c});while(s>21&&a){s-=10;a--}return s;}
+function renderBJ(){document.getElementById('bcards').innerHTML=`<div><b>You</b><div class="cards">${bj.player.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div><div><b>Dealer</b><div class="cards">${bj.dealer.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div>`;}
+function dealBJ(){let bet=+document.getElementById('bet').value;if(!spend(bet))return;bj={active:true,bet,player:[card(),card()],dealer:[card(),card()]};renderBJ();document.getElementById('hit').disabled=false;document.getElementById('stand').disabled=false;document.getElementById('bmsg').textContent='카드를 선택하세요';if(val(bj.player)===21)finishBJ(true);}
+function hitBJ(){if(!bj.active)return;bj.player.push(card());renderBJ();if(val(bj.player)>21)finishBJ(false);}
+function standBJ(){if(!bj.active)return;while(val(bj.dealer)<17)bj.dealer.push(card());renderBJ();finishBJ(val(bj.player)>=val(bj.dealer)&&val(bj.player)<=21);}
+function finishBJ(win){if(!bj.active)return;bj.active=false;let pv=val(bj.player),dv=val(bj.dealer);let msg=pv>21?'💥 Bust!':win?`🎉 승리! +${bj.bet*2}`:'😢 패배!';if(pv===21&&bj.player.length===2){add(bj.bet*2.5);msg=`🃏 Blackjack! +${bj.bet*2.5}`;}else if(win)add(bj.bet*2);document.getElementById('bmsg').textContent=`${msg} (You ${pv} / Dealer ${dv})`;document.getElementById('hit').disabled=true;document.getElementById('stand').disabled=true;}
+
+function dice(el){
+ el.innerHTML=`<div class="status" id="dmsg">두 주사위의 합을 맞혀보세요</div>${betBox(10)}<div class="choice"><button onclick="rollDice('low')">1~6 ×2</button><button onclick="rollDice('high')">8~12 ×2</button><button onclick="rollDice('seven')">7 ×5</button></div>`;
+}
+function rollDice(c){let bet=+document.getElementById('bet').value;if(!spend(bet))return;let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6),s=a+b,win=c==='low'?s<=6:c==='high'?s>=8:s===7;let mult=c==='seven'?5:2;if(win)add(bet*mult);document.getElementById('dmsg').textContent=`🎲 ${a} + ${b} = ${s} — ${win?'🎉 +'+bet*mult:'😢 -'+bet}`;}
+
+function coin(el){el.innerHTML=`<div class="status" id="cmsg">앞면 또는 뒷면을 고르세요</div>${betBox(10)}<div class="choice"><button onclick="flipCoin('앞면')">☀️ 앞면 ×2</button><button onclick="flipCoin('뒷면')">🌙 뒷면 ×2</button></div>`;}
+function flipCoin(c){let bet=+document.getElementById('bet').value;if(!spend(bet))return;let r=Math.random()<.5?'앞면':'뒷면',win=r===c;if(win)add(bet*2);document.getElementById('cmsg').textContent=`🪙 ${r}! ${win?'🎉 +'+bet*2:'😢 -'+bet}`;}
+
+function highlow(el){el.innerHTML=`<div class="status" id="hmsg">첫 카드: ?</div><div class="cards"><div class="playcard" id="hcard">?</div></div>${betBox(10)}<div class="choice"><button onclick="playHL('high')">⬆️ Higher ×2</button><button onclick="playHL('low')">⬇️ Lower ×2</button></div><div class="rules">다음 카드가 현재 카드보다 높은지 낮은지 맞혀보세요.</div>`;window.hl=2+Math.floor(Math.random()*12);document.getElementById('hcard').textContent=deckRanks[hl-2]||'A';}
+function playHL(c){let bet=+document.getElementById('bet').value;if(!spend(bet))return;let n=2+Math.floor(Math.random()*12),win=c==='high'?n>hl:n<hl;document.getElementById('hmsg').textContent=`${hl} → ${n} — ${win?'🎉 +'+bet*2:'😢 -'+bet}`;if(win)add(bet*2);hl=n;document.getElementById('hcard').textContent=deckRanks[hl-2]||'A';}
+
+function jackpot(el){el.innerHTML=`<div class="status" id="jmsg">3개의 슬롯을 맞혀보세요!</div>${betBox(10)}<div class="cards" id="slots"><div class="playcard">🍒</div><div class="playcard">🍋</div><div class="playcard">⭐</div></div><div class="controls"><button class="btn" onclick="spinJackpot()">SPIN</button></div><div class="rules">3개 일치: 10배 · 2개 일치: 3배 · 모두 다름: 꽝</div>`;}
+function spinJackpot(){let bet=+document.getElementById('bet').value;if(!spend(bet))return;let s=['🍒','🍋','⭐','7️⃣','💎'],a=[0,1,2].map(()=>s[Math.floor(Math.random()*s.length)]);document.getElementById('slots').innerHTML=a.map(x=>`<div class="playcard">${x}</div>`).join('');let same=a[0]===a[1]&&a[1]===a[2],pair=new Set(a).size===2;if(same)add(bet*10);else if(pair)add(bet*3);document.getElementById('jmsg').textContent=same?`🎰 JACKPOT! +${bet*10}`:pair?`✨ 2개 일치! +${bet*3}`:`😢 꽝! -${bet}`;}
+</script>
+</body>
+</html>
