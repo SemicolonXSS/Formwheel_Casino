@@ -46,13 +46,29 @@ input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-
 .notice{margin-top:15px;color:#858b98;font-size:12px;text-align:center}
 @media(max-width:750px){.grid{grid-template-columns:1fr 1fr}h1{font-size:34px}}
 @media(max-width:500px){.app{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:24px}.card{min-height:170px}}
+
+.account-btn{border:1px solid #e1e3e9;background:#fff;color:#242731;border-radius:999px;padding:9px 13px;font-weight:900;cursor:pointer}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modal.show{display:flex}
+.modal-card{width:min(420px,100%);background:#fff;border:1px solid #e1e4eb;border-radius:24px;padding:22px;box-shadow:0 20px 60px #0003}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-head h2{margin:0}
+.auth-form{display:grid;gap:11px}
+.auth-form input{width:100%;padding:13px}
+.auth-form .btn{margin-top:3px}
+.auth-switch{text-align:center;color:#666b78;font-size:13px;margin-top:15px}
+.auth-switch button{border:0;background:none;color:#9a7415;font-weight:900;cursor:pointer}
+.user-info{padding:12px;border-radius:14px;background:#f5f6f9;margin-bottom:12px}
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
   <div class="logo" onclick="location.href='https://semicolonxss.github.io/Formwheel/'">Form<span>Wheel</span></div>
-  <div class="balance">🪙 <span class="coin" id="coins">100</span> Coins</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="account-btn" id="accountBtn" onclick="openAccount()">로그인</button>
+    <div class="balance">🪙 <span class="coin" id="coins">100</span> Coins</div>
+  </div>
 </header>
 
 <section class="hero">
@@ -79,16 +95,92 @@ input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-
 </div>
 
 <script>
-const KEY='formwheel_casino_state_v1';
-let state=JSON.parse(localStorage.getItem(KEY)||'null');
-const today=new Date().toISOString().slice(0,10);
-if(!state){state={coins:100,lastDaily:today};}
-if(state.lastDaily!==today){state.coins+=100;state.lastDaily=today;save();}
-document.getElementById('coins').textContent=state.coins;
+const USERS_KEY='formwheel_casino_users_v1';
+const SESSION_KEY='formwheel_casino_session_v1';
+let users=JSON.parse(localStorage.getItem(USERS_KEY)||'{}');
+let currentUser=localStorage.getItem(SESSION_KEY)||'';
+let state=null;
 
-function save(){localStorage.setItem(KEY,JSON.stringify(state));document.getElementById('coins').textContent=state.coins;}
+function loadAccount(){
+  if(currentUser && users[currentUser]){
+    state=users[currentUser];
+    const today=new Date().toISOString().slice(0,10);
+    if(state.lastDaily!==today){
+      state.coins+=100;
+      state.lastDaily=today;
+      save();
+    }
+  }else{
+    state={coins:100,lastDaily:new Date().toISOString().slice(0,10)};
+  }
+  renderAccount();
+  document.getElementById('coins').textContent=state.coins;
+}
+function save(){
+  if(currentUser){
+    users[currentUser]=state;
+    localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  }
+  document.getElementById('coins').textContent=state.coins;
+}
+function renderAccount(){
+  const btn=document.getElementById('accountBtn');
+  btn.textContent=currentUser ? currentUser : '로그인';
+}
+loadAccount();
 function spend(n){if(!Number.isInteger(n)||n<1||state.coins<n){alert('코인이 부족합니다!');return false;}state.coins-=n;save();return true;}
 function add(n){state.coins+=n;save();}
+
+function openAccount(){
+  document.getElementById('accountModal').classList.add('show');
+  renderAuth(currentUser ? 'profile' : 'login');
+}
+function closeAccount(){document.getElementById('accountModal').classList.remove('show');}
+function renderAuth(mode){
+  const area=document.getElementById('authArea');
+  const title=document.getElementById('accountTitle');
+  if(mode==='profile'){
+    title.textContent='내 계정';
+    area.innerHTML=`<div class="user-info"><b>${escapeHtml(currentUser)}</b><br><span style="color:#777">보유 코인: 🪙 ${state.coins}</span></div>
+    <button class="btn" style="width:100%" onclick="logout()">로그아웃</button>`;
+    return;
+  }
+  title.textContent=mode==='login'?'로그인':'회원가입';
+  area.innerHTML=`<div class="auth-form">
+    <input id="authUser" autocomplete="username" placeholder="아이디" maxlength="20">
+    <input id="authPass" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="비밀번호" maxlength="40">
+    <button class="btn" onclick="${mode==='login'?'login()':'signup()'}">${mode==='login'?'로그인':'회원가입'}</button>
+  </div>
+  <div class="auth-switch">${mode==='login'?'계정이 없나요?':'이미 계정이 있나요?'}
+    <button onclick="renderAuth('${mode==='login'?'signup':'login'}')">${mode==='login'?'회원가입':'로그인'}</button>
+  </div>`;
+}
+function cleanUser(v){return v.trim().toLowerCase();}
+function signup(){
+  const u=cleanUser(document.getElementById('authUser').value),p=document.getElementById('authPass').value;
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(u)){alert('아이디는 영문, 숫자, _를 사용해 3~20자로 입력해주세요.');return;}
+  if(p.length<4){alert('비밀번호는 4자 이상 입력해주세요.');return;}
+  if(users[u]){alert('이미 존재하는 아이디입니다.');return;}
+  users[u]={coins:100,lastDaily:new Date().toISOString().slice(0,10),password:p};
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  currentUser=u;localStorage.setItem(SESSION_KEY,u);state=users[u];save();renderAccount();closeAccount();
+  alert('회원가입 완료! 🎉 오늘의 100코인이 지급되었습니다.');
+}
+function login(){
+  const u=cleanUser(document.getElementById('authUser').value),p=document.getElementById('authPass').value;
+  if(!users[u] || users[u].password!==p){alert('아이디 또는 비밀번호가 올바르지 않습니다.');return;}
+  currentUser=u;localStorage.setItem(SESSION_KEY,u);state=users[u];
+  const today=new Date().toISOString().slice(0,10);
+  if(state.lastDaily!==today){state.coins+=100;state.lastDaily=today;}
+  save();renderAccount();closeAccount();
+}
+function logout(){
+  currentUser='';localStorage.removeItem(SESSION_KEY);
+  state={coins:100,lastDaily:new Date().toISOString().slice(0,10)};
+  renderAccount();document.getElementById('coins').textContent=state.coins;closeAccount();
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
 function openGame(type){
  document.getElementById('game').classList.add('active');
  const titles={roulette:'🎡 Roulette',blackjack:'🃏 Blackjack',dice:'🎲 Dice',coin:'🪙 Coin Flip',highlow:'⬆️ High & Low',jackpot:'🏆 Jackpot'};
