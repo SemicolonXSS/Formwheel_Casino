@@ -266,7 +266,7 @@ function spinRoulette(choice){
 }
 function blackjack(el){
  el.innerHTML=`<div class="status" id="bmsg">베팅 후 Deal!</div><div class="cards" id="bcards"></div>${betBox(20)}
- <div class="controls"><button class="btn" onclick="dealBJ()">Deal</button><button class="btn secondary" id="hit" onclick="hitBJ()" disabled>Hit</button><button class="btn secondary" id="stand" onclick="standBJ()" disabled>Stand</button></div>
+ <p class="hint">동점은 베팅 전액 환불입니다. 게임 중 새 Deal은 할 수 없습니다.</p><div class="controls"><button class="btn" id="deal" onclick="dealBJ()">Deal</button><button class="btn secondary" id="hit" onclick="hitBJ()" disabled>Hit</button><button class="btn secondary" id="stand" onclick="standBJ()" disabled>Stand</button></div>
  <div class="rules">간단한 싱글플레이 블랙잭입니다. 21에 가까운 쪽이 승리하며, 블랙잭은 2.5배 지급됩니다.</div>`;
  window.bj={active:false,player:[],dealer:[]};
 }
@@ -274,10 +274,10 @@ const deckRanks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 function card(){return deckRanks[Math.floor(Math.random()*deckRanks.length)];}
 function val(cards){let s=0,a=0;cards.forEach(c=>{if(c==='A'){s+=11;a++}else s+=isNaN(+c)?10:+c});while(s>21&&a){s-=10;a--}return s;}
 function renderBJ(){document.getElementById('bcards').innerHTML=`<div><b>You</b><div class="cards">${bj.player.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div><div><b>Dealer</b><div class="cards">${bj.dealer.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div>`;}
-function dealBJ(){let bet=+document.getElementById('bet').value;if(!spend(bet))return;bj={active:true,bet,player:[card(),card()],dealer:[card(),card()]};renderBJ();document.getElementById('hit').disabled=false;document.getElementById('stand').disabled=false;document.getElementById('bmsg').textContent='카드를 선택하세요';if(val(bj.player)===21)finishBJ(true);}
+function dealBJ(){if(bj.active){document.getElementById('bmsg').textContent='현재 게임을 먼저 마쳐주세요.';return}let bet=+document.getElementById('bet').value;if(!spend(bet))return;bj={active:true,bet,player:[card(),card()],dealer:[card(),card()]};renderBJ();document.getElementById('hit').disabled=false;document.getElementById('stand').disabled=false;document.getElementById('bmsg').textContent='카드를 선택하세요';document.getElementById('deal').disabled=true;if(val(bj.player)===21)standBJ();}
 function hitBJ(){if(!bj.active)return;bj.player.push(card());renderBJ();if(val(bj.player)>21)finishBJ(false);}
-function standBJ(){if(!bj.active)return;while(val(bj.dealer)<17)bj.dealer.push(card());renderBJ();finishBJ(val(bj.player)>=val(bj.dealer)&&val(bj.player)<=21);}
-function finishBJ(win){if(!bj.active)return;bj.active=false;let pv=val(bj.player),dv=val(bj.dealer);let msg=pv>21?'💥 Bust!':win?`🎉 승리! +${bj.bet*2}`:'😢 패배!';if(pv===21&&bj.player.length===2){add(bj.bet*2.5);msg=`🃏 Blackjack! +${bj.bet*2.5}`;}else if(win)add(bj.bet*2);document.getElementById('bmsg').textContent=`${msg} (You ${pv} / Dealer ${dv})`;document.getElementById('hit').disabled=true;document.getElementById('stand').disabled=true;}
+function standBJ(){if(!bj.active)return;while(val(bj.dealer)<17)bj.dealer.push(card());renderBJ();const pv=val(bj.player),dv=val(bj.dealer);finishBJ(pv===dv?'push':pv<=21&&(dv>21||pv>dv));}
+function finishBJ(win){if(!bj.active)return;bj.active=false;let pv=val(bj.player),dv=val(bj.dealer);let msg=pv>21?'💥 Bust!':win==='push'?`🤝 무승부 · 베팅 ${bj.bet} 환불`:win?`🎉 승리! +${bj.bet*2}`:'😢 패배!';if(win==='push'){add(bj.bet);}else if(pv===21&&bj.player.length===2){add(bj.bet*2.5);msg=`🃏 Blackjack! +${bj.bet*2.5}`;}else if(win)add(bj.bet*2);document.getElementById('deal').disabled=false;document.getElementById('bmsg').textContent=`${msg} (You ${pv} / Dealer ${dv})`;document.getElementById('hit').disabled=true;document.getElementById('stand').disabled=true;}
 
 function dice(el){
  el.innerHTML=`<div class="status" id="dmsg">두 주사위의 합을 맞혀보세요</div>${betBox(10)}<div class="choice"><button onclick="rollDice('low')">1~6 ×2</button><button onclick="rollDice('high')">8~12 ×2</button><button onclick="rollDice('seven')">7 ×5</button></div>`;
@@ -295,3 +295,4 @@ function spinJackpot(){let bet=+document.getElementById('bet').value;if(!spend(b
 </script>
 </body>
 </html>
+
