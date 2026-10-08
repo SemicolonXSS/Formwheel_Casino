@@ -25,7 +25,7 @@ function renderWallet(){
  for(const [id,item] of Object.entries(W.catalog)){const button=document.createElement('button');button.className='btn secondary';button.disabled=walletBusy||authLoading;const owned=state.inventory?.[id];button.textContent=item.name+(owned?' · 적용':' · '+item.price+' 코인');button.onclick=()=>transact({type:owned?'equip':'purchase',item:id}).catch(reportWallet);shop.append(button)}
  const history=document.getElementById('history');history.replaceChildren();Object.values(state.ledger||{}).sort((a,b)=>b.at-a.at).slice(0,30).forEach(entry=>{const li=document.createElement('li');li.textContent=new Date(entry.at).toLocaleString()+' · '+entry.label+' · '+(entry.delta>=0?'+':'')+entry.delta+' · 잔액 '+entry.balance;history.append(li)});
 }
-function reportWallet(e){document.getElementById('walletStatus').textContent='처리 실패: '+(window.FormwheelUI?.errorMessage(e)||e.message);renderWallet()}
+function reportWallet(e){document.getElementById('walletStatus').textContent='처리 실패: '+(e.code?window.FormwheelUI?.errorMessage(e)||e.message:e.message);renderWallet()}
 async function transact(operation){
  if(walletBusy||authLoading)throw new Error('이전 거래 또는 인증 확인이 끝날 때까지 기다려주세요.');
  walletBusy=true;const generation=walletGeneration,uid=currentUser,op={...operation,id:crypto.randomUUID(),at:Date.now()};renderWallet();
