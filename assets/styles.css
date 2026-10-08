@@ -1,0 +1,53 @@
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f8fc;color:#17181c}
+button{font:inherit}
+a{text-decoration:none;color:inherit}
+.app{max-width:1050px;margin:auto;padding:18px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 22px}
+.logo{font-weight:900;font-size:22px;cursor:pointer}
+.logo span{color:#d9a441}
+.balance{background:#ffffff;border:1px solid #e2e4ea;border-radius:999px;padding:9px 14px;font-weight:800}
+.coin{color:#ffd66b}
+.hero{background:#ffffff;border:1px solid #e2e4ea;border-radius:26px;padding:30px;margin-bottom:18px}
+.eyebrow{font-size:13px;color:#d9a441;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:42px;line-height:1.05;margin:8px 0}
+.hero p{color:#666b78;margin:0;max-width:650px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#ffffff;border:1px solid #e2e4ea;border-radius:22px;padding:22px;min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
+.icon{font-size:38px}
+.card h2{margin:10px 0 5px;font-size:21px}
+.card p{color:#666b78;font-size:14px;margin:0}
+.btn{border:0;border-radius:13px;padding:12px 15px;font-weight:900;cursor:pointer;background:#e5b94d;color:#151515;margin-top:16px}
+.btn.secondary{background:#282c37;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.panel{display:none;background:#ffffff;border:1px solid #e2e4ea;border-radius:22px;padding:24px;margin-top:18px}
+.panel.active{display:block}
+.panelhead{display:flex;justify-content:space-between;gap:15px;align-items:center}
+.panelhead h2{margin:0}
+.close{background:#eef0f4;color:#30333b;border:0;border-radius:10px;padding:9px 12px;cursor:pointer}
+.status{text-align:center;font-size:24px;font-weight:900;margin:20px 0}
+.wheel{width:240px;height:240px;border-radius:50%;margin:10px auto 20px;border:9px solid #d6b04d;background:conic-gradient(#b63838 0 12.5%,#e9ebf0 12.5% 25%,#b63838 25% 37.5%,#e9ebf0 37.5% 50%,#b63838 50% 62.5%,#e9ebf0 62.5% 75%,#b63838 75% 87.5%,#e9ebf0 87.5% 100%);display:grid;place-items:center;box-shadow:0 0 0 5px #2b2e38,0 12px 35px #0008}
+.wheel span{width:70px;height:70px;background:#f1cf69;color:#16171c;border-radius:50%;display:grid;place-items:center;font-weight:1000}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+input{width:130px;background:#fff;border:1px solid #d9dce3;color:#17181c;border-radius:11px;padding:11px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:430px;margin:15px auto}
+.choice button{padding:15px;border:1px solid #e0e2e8;background:#f5f6f9;color:#20232b;border-radius:14px;font-weight:900;cursor:pointer}
+.cards{display:flex;justify-content:center;gap:12px;margin:20px 0}
+.playcard{width:80px;height:112px;border-radius:12px;background:#f5f5f5;color:#171717;display:grid;place-items:center;font-size:30px;font-weight:900}
+.rules{color:#666b78;font-size:13px;line-height:1.6;margin-top:18px}
+.notice{margin-top:15px;color:#858b98;font-size:12px;text-align:center}
+@media(max-width:750px){.grid{grid-template-columns:1fr 1fr}h1{font-size:34px}}
+@media(max-width:500px){.app{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:24px}.card{min-height:170px}}
+
+.account-btn{border:1px solid #e1e3e9;background:#fff;color:#242731;border-radius:999px;padding:9px 13px;font-weight:900;cursor:pointer}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modal.show{display:flex}
+.modal-card{width:min(420px,100%);background:#fff;border:1px solid #e1e4eb;border-radius:24px;padding:22px;box-shadow:0 20px 60px #0003}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-head h2{margin:0}
+.auth-form{display:grid;gap:11px}
+.auth-form input{width:100%;padding:13px}
+.auth-form .btn{margin-top:3px}
+.auth-switch{text-align:center;color:#666b78;font-size:13px;margin-top:15px}
+.auth-switch button{border:0;background:none;color:#9a7415;font-weight:900;cursor:pointer}
+.user-info{padding:12px;border-radius:14px;background:#f5f6f9;margin-bottom:12px}
