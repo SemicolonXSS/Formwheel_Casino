@@ -1,6 +1,6 @@
 # Formwheel_Casino
 
-코인으로 룰렛과 슬롯 등 다양한 미니게임을 즐기는 프로젝트.
+가상 코인 미니게임과 UID 지갑·거래 내역·배경/이름 장식 상점을 제공하는 프로젝트.
 
 - 실행: https://semicolonxss.github.io/Formwheel_Casino/
 - 프로젝트 목록: https://semicolonxss.github.io/Formwheel/
