@@ -11,11 +11,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const auth=firebase.auth(),W=FormwheelWallet,LOCAL_KEY='formwheel_casino_practice_v2';
-let currentUser='',accountName='',walletBusy=false,authLoading=true,walletGeneration=0;
+let currentUser='',accountName='',walletBusy=false,authLoading=true,walletGeneration=0,accountBalance=null;
+let accountWalletStatus='';
 let state=W.initial(todayStr());
 try{const cached=JSON.parse(localStorage.getItem(LOCAL_KEY));if(cached?.version===2)state=cached}catch{}
 function todayStr(){return new Date().toISOString().slice(0,10)}
-function walletRef(){return db.ref('casinoV2/wallets/'+currentUser)}
+function renderWalletStatus(detail){
+ document.getElementById('walletStatus').textContent=[detail,accountWalletStatus].filter(Boolean).join(' · ');
+}
 function renderWallet(){
  document.getElementById('coins').textContent=state.coins;
  document.getElementById('accountBtn').textContent=authLoading?'인증 확인 중':(accountName||'로그인');
@@ -25,22 +28,41 @@ function renderWallet(){
  for(const [id,item] of Object.entries(W.catalog)){const button=document.createElement('button');button.className='btn secondary';button.disabled=walletBusy||authLoading;const owned=state.inventory?.[id];button.textContent=item.name+(owned?' · 적용':' · '+item.price+' 코인');button.onclick=()=>transact({type:owned?'equip':'purchase',item:id}).catch(reportWallet);shop.append(button)}
  const history=document.getElementById('history');history.replaceChildren();Object.values(state.ledger||{}).sort((a,b)=>b.at-a.at).slice(0,30).forEach(entry=>{const li=document.createElement('li');li.textContent=new Date(entry.at).toLocaleString()+' · '+entry.label+' · '+(entry.delta>=0?'+':'')+entry.delta+' · 잔액 '+entry.balance;history.append(li)});
 }
-function reportWallet(e){document.getElementById('walletStatus').textContent='처리 실패: '+(e.code?window.FormwheelUI?.errorMessage(e)||e.message:e.message);renderWallet()}
+function reportWallet(e){renderWalletStatus('처리 실패: '+(e.code?window.FormwheelUI?.errorMessage(e)||e.message:e.message));renderWallet()}
 async function transact(operation){
  if(walletBusy||authLoading)throw new Error('이전 거래 또는 인증 확인이 끝날 때까지 기다려주세요.');
- walletBusy=true;const generation=walletGeneration,uid=currentUser,op={...operation,id:crypto.randomUUID(),at:Date.now()};renderWallet();
- try{if(uid){const result=await db.ref('casinoV2/wallets/'+uid).transaction(cur=>W.apply(cur||W.initial(todayStr()),op));if(!result.committed)throw new Error('거래가 취소되었습니다');if(generation===walletGeneration)state=result.snapshot.val()}
- else{state=W.apply(state,op);try{localStorage.setItem(LOCAL_KEY,JSON.stringify(state))}catch{}}
- if(generation===walletGeneration)document.getElementById('walletStatus').textContent=uid?'UID 계정 지갑에 저장했습니다. 게임 지급액은 아직 클라이언트 검증 방식입니다.':'이 기기의 연습 지갑에 저장했습니다.';
+ walletBusy=true;
+ const op={...operation,id:crypto.randomUUID(),at:Date.now()};
+ renderWallet();
+ try{
+  const next=W.apply(state,op);
+  localStorage.setItem(LOCAL_KEY,JSON.stringify(next));
+  state=next;
+  renderWalletStatus('이 기기의 연습 지갑에 저장했어요.');
  return true;
  }finally{walletBusy=false;renderWallet()}
 }
 auth.onAuthStateChanged(async user=>{
- walletGeneration++;currentUser=user?.uid||'';accountName=user?.displayName||user?.email||'';authLoading=true;
- try{if(user){const result=await walletRef().transaction(cur=>cur||W.initial(todayStr()));state=result.snapshot.val()||W.initial(todayStr())}
- else{state=W.initial(todayStr());try{state=JSON.parse(localStorage.getItem(LOCAL_KEY))||state}catch{}}
- }catch(e){state=W.initial(todayStr());reportWallet(e)}finally{authLoading=false;renderWallet()}
- if(state.lastDaily!==todayStr())transact({type:'daily',day:todayStr()}).catch(reportWallet);
+ const generation=++walletGeneration;
+ currentUser=user?.uid||'';
+ accountName=user?.displayName||user?.email||(user?'로그인 계정':'');
+ accountBalance=null;
+ authLoading=false;
+ accountWalletStatus=user?'계정 지갑 조회 중':'';
+ renderWallet();
+ renderWalletStatus('기기 연습 지갑');
+ if(state.lastDaily!==todayStr()&&!walletBusy)transact({type:'daily',day:todayStr()}).catch(reportWallet);
+ if(!user)return;
+ try{
+  const data=(await db.ref('casinoV2/wallets/'+user.uid).once('value')).val();
+  if(generation!==walletGeneration)return;
+  accountBalance=Number.isSafeInteger(data?.coins)&&data.coins>=0?data.coins:null;
+  accountWalletStatus=accountBalance===null?'저장된 계정 지갑 없음':'계정 지갑 '+accountBalance.toLocaleString()+' 코인 (조회 전용)';
+ }catch{
+  if(generation!==walletGeneration)return;
+  accountWalletStatus='계정 지갑을 불러오지 못했어요.';
+ }
+ renderWalletStatus('기기 연습 지갑');
 });
 async function spend(n){if(walletBusy||authLoading||!Number.isInteger(n)||n<1||n>1000000||state.coins<n){alert('코인 또는 거래 상태를 확인하세요.');return false}try{await transact({type:'game',delta:-n,label:'게임 사용'});return true}catch(e){reportWallet(e);return false}}
 // Payout waits for stake transaction; every change has its own receipt.
@@ -49,14 +71,14 @@ function add(n){const generation=walletGeneration;payoutQueue=payoutQueue.then(a
 function openAccount(){if(walletBusy||(typeof bj!=='undefined'&&bj.active)){alert('현재 게임과 거래를 먼저 마쳐주세요.');return}document.getElementById('accountModal').classList.add('show');renderAuth(currentUser?'profile':'login')}
 function closeAccount(){document.getElementById('accountModal').classList.remove('show')}
 function renderAuth(mode){const area=document.getElementById('authArea'),title=document.getElementById('accountTitle');
- if(mode==='profile'){title.textContent='내 계정';area.innerHTML='<div class="user-info"></div><button class="btn" onclick="logout()">로그아웃</button>';area.firstChild.textContent=accountName+' · '+state.coins+' 코인';return}
+ if(mode==='profile'){title.textContent='내 계정';area.innerHTML='<div class="user-info"></div><button class="btn" onclick="logout()">로그아웃</button>';area.firstChild.textContent=accountName+' · '+(accountBalance===null?accountWalletStatus:'계정 지갑 '+accountBalance.toLocaleString()+' 코인 (조회 전용)');return}
  title.textContent=mode==='login'?'로그인':'회원가입';area.innerHTML=`<div class="auth-form"><input id="authUser" type="email" autocomplete="username" placeholder="이메일"><input id="authPass" type="password" minlength="6" autocomplete="${mode==='login'?'current-password':'new-password'}" placeholder="비밀번호 (6자 이상)"><button id="authSubmit" class="btn" onclick="${mode==='login'?'login()':'signup()'}">${mode==='login'?'로그인':'회원가입'}</button><button class="btn secondary" onclick="googleLogin()">Google로 로그인</button><p id="authError" role="alert"></p></div><div class="auth-switch"><button onclick="renderAuth('${mode==='login'?'signup':'login'}')">${mode==='login'?'회원가입':'로그인'}</button></div><p class="rules">기존 아이디 계정은 새 이메일 계정과 별개입니다. 기존 코인은 자동으로 옮기거나 삭제하지 않습니다. 비밀번호는 Firebase 인증에서 처리하며 데이터베이스에 저장하지 않습니다.</p>`;
 }
 async function authenticate(fn){const btn=document.getElementById('authSubmit');if(btn)btn.disabled=true;try{await fn();closeAccount()}catch(e){const box=document.getElementById('authError');if(box)box.textContent=window.FormwheelUI?.errorMessage(e)||e.message;else reportWallet(e)}finally{if(btn)btn.disabled=false}}
 function login(){return authenticate(()=>auth.signInWithEmailAndPassword(document.getElementById('authUser').value.trim(),document.getElementById('authPass').value))}
 function signup(){return authenticate(()=>auth.createUserWithEmailAndPassword(document.getElementById('authUser').value.trim(),document.getElementById('authPass').value))}
 function googleLogin(){return authenticate(()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()))}
-async function logout(){if(walletBusy||bj.active){alert('거래가 끝난 뒤 로그아웃하세요.');return}await auth.signOut();closeAccount()}
+async function logout(){if(walletBusy||(typeof bj!=='undefined'&&bj.active)){alert('거래가 끝난 뒤 로그아웃하세요.');return}await auth.signOut();closeAccount()}
 renderWallet();
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
