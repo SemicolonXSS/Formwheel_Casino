@@ -22,8 +22,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <script type="module" src="https://semicolonxss.github.io/Formwheel/shared/direct-visitor.js?v=20261028"></script>
 </head>
-<body><div id="fw-battle-entry" style="position:relative;z-index:999;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px;padding:12px;background:#eef2ff;border:2px solid #a4b3ed;border-radius:14px;font-family:system-ui,sans-serif"><b style="color:#25376e">🎮 게임 모드</b><span style="padding:10px;color:#25376e">👤 일반</span><a href="./battle.html" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#445bcc;color:#fff;text-decoration:none;font-weight:800">⚔️ 배틀 모드 →</a></div>
-<div class="app">
+<body><div role="navigation" aria-label="게임 모드" id="fw-battle-entry" style="position:relative;z-index:999;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px;padding:12px;background:#eef2ff;border:2px solid #a4b3ed;border-radius:14px;font-family:system-ui,sans-serif"><b style="color:#25376e">🎮 게임 모드</b><span style="padding:10px;color:#25376e">👤 일반</span><a href="./battle.html" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#445bcc;color:#fff;text-decoration:none;font-weight:800">⚔️ 배틀 모드 →</a></div>
+<main class="app">
 <header class="top">
   <a class="logo fw-hub-logo" aria-label="FormWheel 메인으로 이동" href="https://semicolonxss.github.io/Formwheel/"><span class="fw-hub-form">Form</span><span class="fw-hub-icon" aria-hidden="true"></span><span class="fw-hub-wheel">Wheel</span></a>
   <div style="display:flex;align-items:center;gap:8px">
@@ -54,9 +54,9 @@
 </section>
 
 <div class="notice">※ 이 게임은 재미를 위한 가상 코인 게임이며 실제 금전 거래나 현금화 기능이 없습니다.</div>
-</div>
+</main>
 
-<div class="modal" id="accountModal">
+<div class="modal" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
   <div class="modal-card">
     <div class="modal-head"><h2 id="accountTitle">로그인</h2><button class="close" onclick="closeAccount()">닫기</button></div>
     <div id="authArea"></div>

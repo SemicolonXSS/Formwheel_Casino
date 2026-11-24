@@ -98,7 +98,7 @@ function openGame(type){
 function closeGame(){document.getElementById('game').classList.remove('active');}
 
 function betBox(defaultBet=10){
- return `<div class="controls"><input id="bet" type="number" min="1" value="${defaultBet}"><span style="align-self:center;color:#aaa">코인 베팅</span></div>`;
+ return `<div class="controls"><input aria-label="베팅할 코인" id="bet" type="number" min="1" value="${defaultBet}"><span style="align-self:center;color:#626773">코인 베팅</span></div>`;
 }
 function roulette(el){
  el.innerHTML=`<div class="status" id="rmsg">베팅하고 룰렛을 돌리세요</div><div class="wheel" id="wheel"><span>FORM</span></div>
