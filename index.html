@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f8fc">
-<title>Casino</title>
+<title>Casino Practice</title>
 <link rel="stylesheet" href="./assets/styles.css?v=76756e98d553">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -13,11 +13,11 @@
 <link rel="stylesheet" href="https://semicolonxss.github.io/Formwheel/shared/formwheel-ui.css">
 <script defer src="https://semicolonxss.github.io/Formwheel/shared/formwheel-ui.js"></script>
 <meta property="og:title" content="Casino · Formwheel">
-<meta property="og:description" content="가상 코인 미니게임과 UID 지갑·거래 내역·배경/이름 장식 상점을 제공하는 프로젝트.">
+<meta property="og:description" content="카드 계산과 확률 관찰을 위한 연습 공간.">
 <meta property="og:image" content="https://semicolonxss.github.io/Formwheel_Casino/assets/thumbnail.svg">
 <link rel="stylesheet" href="assets/formwheel-brand.css?v=20261008-hub-logo">
 <link rel="icon" type="image/svg+xml" href="https://semicolonxss.github.io/Formwheel/assets/formwheel-favicon.svg">
-<meta name="description" content="가상 칩으로 즐기는 Formwheel Casino 게임과 일일 보상.">
+<meta name="description" content="코인 소모 없는 Formwheel 연습 게임.">
 <link rel="canonical" href="https://semicolonxss.github.io/Formwheel_Casino/">
 <meta name="twitter:card" content="summary_large_image">
 <script type="module" src="https://semicolonxss.github.io/Formwheel/shared/direct-visitor.js?v=20261028"></script>
@@ -34,18 +34,18 @@
 
 <section class="hero">
   <div class="eyebrow">FormWheel Games</div>
-  <h1>🎰 Casino</h1><div role="note" style="margin:12px 0;padding:10px 13px;border:1px solid #e3bc72;border-radius:10px;background:#fff7e9;color:#624414;font-size:14px;line-height:1.55"><strong>기기 연습 모드</strong><div>로그인 중에도 게임과 상점은 이 기기의 연습 지갑으로 이용해요. 계정 지갑은 잔액만 조회할 수 있어요.</div></div>
-  <p>친구들과 가상 코인으로 즐기는 미니 카지노. 매일 100코인을 받아 게임을 시작하세요.</p>
+  <h1>Casino Practice</h1><div role="note" style="margin:12px 0;padding:10px 13px;border:1px solid #e3bc72;border-radius:10px;background:#fff7e9;color:#624414;font-size:14px;line-height:1.55"><strong>기기 연습 모드</strong><div>게임은 잔액을 변경하지 않습니다. 기존 기기 지갑과 상점은 보존하며 계정 지갑은 조회 전용입니다.</div></div>
+  <p>코인 소모 없이 카드 계산과 확률 결과를 연습하세요.</p>
 </section>
 
 <section class="hero"><h2>코인 상점 · 인벤토리</h2><p>배경과 이름 장식을 가상 코인으로 구매합니다.</p><div id="shop" class="controls"></div><p id="walletStatus" role="status">기기 연습 지갑 · 서버 검증이 적용되기 전까지 경쟁 기록으로 사용하지 않습니다.</p><details><summary>최근 코인 내역</summary><ol id="history"></ol></details></section>
 <section class="grid">
-  <article class="card"><div><div class="icon">🎡</div><h2>Roulette</h2><p>숫자와 색을 골라 룰렛을 돌려보세요.</p></div><button class="btn" onclick="openGame('roulette')">Play</button></article>
+  <article class="card"><div><div class="icon">🎡</div><h2>Roulette</h2><p>숫자와 색의 결과를 관찰하세요.</p></div><button class="btn" onclick="openGame('roulette')">Play</button></article>
   <article class="card"><div><div class="icon">🃏</div><h2>Blackjack</h2><p>21에 가까워지도록 카드를 받아보세요.</p></div><button class="btn" onclick="openGame('blackjack')">Play</button></article>
-  <article class="card"><div><div class="icon">🎲</div><h2>Dice</h2><p>주사위의 합을 맞혀보세요.</p></div><button class="btn" onclick="openGame('dice')">Play</button></article>
-  <article class="card"><div><div class="icon">🪙</div><h2>Coin Flip</h2><p>앞면 또는 뒷면을 선택하세요.</p></div><button class="btn" onclick="openGame('coin')">Play</button></article>
-  <article class="card"><div><div class="icon">⬆️</div><h2>High & Low</h2><p>다음 카드가 높을지 낮을지 예측하세요.</p></div><button class="btn" onclick="openGame('highlow')">Play</button></article>
-  <article class="card"><div><div class="icon">🏆</div><h2>Jackpot</h2><p>행운을 시험하는 간단한 슬롯 게임입니다.</p></div><button class="btn" onclick="openGame('jackpot')">Play</button></article>
+  <article class="card"><div><div class="icon">🎲</div><h2>Dice</h2><p>주사위의 합을 관찰하세요.</p></div><button class="btn" onclick="openGame('dice')">Play</button></article>
+  <article class="card"><div><div class="icon">🪙</div><h2>Coin Flip</h2><p>동전의 결과를 관찰하세요.</p></div><button class="btn" onclick="openGame('coin')">Play</button></article>
+  <article class="card"><div><div class="icon">⬆️</div><h2>High & Low</h2><p>두 카드의 크기를 비교하세요.</p></div><button class="btn" onclick="openGame('highlow')">Play</button></article>
+  <article class="card"><div><div class="icon">🏆</div><h2>Jackpot</h2><p>세 기호의 일치 여부를 관찰하세요.</p></div><button class="btn" onclick="openGame('jackpot')">Play</button></article>
 </section>
 
 <section id="game" class="panel">
@@ -53,7 +53,7 @@
   <div id="gameBody"></div>
 </section>
 
-<div class="notice">※ 이 게임은 재미를 위한 가상 코인 게임이며 실제 금전 거래나 현금화 기능이 없습니다.</div>
+<div class="notice">※ 연습 결과는 코인 지급이나 차감에 연결되지 않습니다.</div>
 </div>
 
 <div class="modal" id="accountModal">
@@ -63,7 +63,7 @@
   </div>
 </div>
 
-<script src="./assets/app.js?v=20261124-practice-wallet"></script>
+<script src="./assets/app.js?v=20261125-no-stake-practice"></script>
 <script type="module" src="https://semicolonxss.github.io/Formwheel/assets/live-presence.js?v=20261017-duration"></script>
 </body>
 </html>
