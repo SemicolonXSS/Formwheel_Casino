@@ -51,7 +51,7 @@ auth.onAuthStateChanged(async user=>{
  accountWalletStatus=user?'계정 지갑 조회 중':'';
  renderWallet();
  renderWalletStatus('기기 연습 지갑');
- if(state.lastDaily!==todayStr()&&!walletBusy)transact({type:'daily',day:todayStr()}).catch(reportWallet);
+
  if(!user)return;
  try{
   const data=(await db.ref('casinoV2/wallets/'+user.uid).once('value')).val();
@@ -64,10 +64,6 @@ auth.onAuthStateChanged(async user=>{
  }
  renderWalletStatus('기기 연습 지갑');
 });
-async function spend(n){if(walletBusy||authLoading||!Number.isInteger(n)||n<1||n>1000000||state.coins<n){alert('코인 또는 거래 상태를 확인하세요.');return false}try{await transact({type:'game',delta:-n,label:'게임 사용'});return true}catch(e){reportWallet(e);return false}}
-// Payout waits for stake transaction; every change has its own receipt.
-let payoutQueue=Promise.resolve();
-function add(n){const generation=walletGeneration;payoutQueue=payoutQueue.then(async()=>{while(walletBusy)await new Promise(r=>setTimeout(r,30));if(generation!==walletGeneration)throw new Error('계정이 바뀌어 지급이 보류되었습니다.');await transact({type:'game',delta:n,label:'게임 지급'})}).catch(reportWallet)}
 function openAccount(){if(walletBusy||(typeof bj!=='undefined'&&bj.active)){alert('현재 게임과 거래를 먼저 마쳐주세요.');return}document.getElementById('accountModal').classList.add('show');renderAuth(currentUser?'profile':'login')}
 function closeAccount(){document.getElementById('accountModal').classList.remove('show')}
 function renderAuth(mode){const area=document.getElementById('authArea'),title=document.getElementById('accountTitle');
@@ -83,6 +79,7 @@ renderWallet();
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
 function openGame(type){
+ if(window.bj)window.bj.active=false;
  document.getElementById('game').classList.add('active');
  const titles={roulette:'🎡 Roulette',blackjack:'🃏 Blackjack',dice:'🎲 Dice',coin:'🪙 Coin Flip',highlow:'⬆️ High & Low',jackpot:'🏆 Jackpot'};
  document.getElementById('gameTitle').textContent=titles[type];
@@ -95,48 +92,28 @@ function openGame(type){
  if(type==='jackpot') jackpot(body);
  document.getElementById('game').scrollIntoView({behavior:'smooth'});
 }
-function closeGame(){document.getElementById('game').classList.remove('active');}
+function closeGame(){if(window.bj)window.bj.active=false;document.getElementById('game').classList.remove('active');}
 
-function betBox(defaultBet=10){
- return `<div class="controls"><input id="bet" type="number" min="1" value="${defaultBet}"><span style="align-self:center;color:#aaa">코인 베팅</span></div>`;
-}
 function roulette(el){
- el.innerHTML=`<div class="status" id="rmsg">베팅하고 룰렛을 돌리세요</div><div class="wheel" id="wheel"><span>FORM</span></div>
- ${betBox()}<div class="choice"><button onclick="spinRoulette('red')">🔴 Red ×2</button><button onclick="spinRoulette('black')">⚫ Black ×2</button><button onclick="spinRoulette('even')">짝수 ×2</button><button onclick="spinRoulette('odd')">홀수 ×2</button></div>
- <div class="rules">룰렛은 0~36 중 하나가 랜덤으로 선택됩니다. 당첨 시 베팅 금액의 2배를 받습니다.</div>`;
+ el.innerHTML='<div class="status" id="rmsg">0~36 숫자와 색을 관찰하세요.</div><div class="wheel"><span>FORM</span></div><button class="btn" onclick="spinRoulette()">돌리기</button><div class="rules">결과 관찰용이며 점수나 코인 변동이 없습니다.</div>';
 }
-async function spinRoulette(choice){
- const bet=+document.getElementById('bet').value;if(!await spend(bet))return;
- const n=Math.floor(Math.random()*37),red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
- const win=choice==='red'?red.includes(n):choice==='black'?n!==0&&!red.includes(n):choice==='even'?n!==0&&n%2===0:n!==0&&n%2===1;
- document.getElementById('rmsg').textContent=`🎯 ${n} — ${win?'🎉 당첨! +'+bet+' 코인':'😢 아쉽네요. -'+bet+' 코인'}`;
- if(win)add(bet*2);
-}
+function spinRoulette(){const n=Math.floor(Math.random()*37),red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];document.getElementById('rmsg').textContent=n+' · '+(n===0?'초록':red.includes(n)?'빨강':'검정');}
 function blackjack(el){
- el.innerHTML=`<div class="status" id="bmsg">베팅 후 Deal!</div><div class="cards" id="bcards"></div>${betBox(20)}
- <p class="hint">동점은 베팅 전액 환불입니다. 게임 중 새 Deal은 할 수 없습니다.</p><div class="controls"><button class="btn" id="deal" onclick="dealBJ()">Deal</button><button class="btn secondary" id="hit" onclick="hitBJ()" disabled>Hit</button><button class="btn secondary" id="stand" onclick="standBJ()" disabled>Stand</button></div>
- <div class="rules">간단한 싱글플레이 블랙잭입니다. 21에 가까운 쪽이 승리하며, 블랙잭은 2.5배 지급됩니다.</div>`;
- window.bj={active:false,player:[],dealer:[]};
+ el.innerHTML='<div class="status" id="bmsg">21에 가까운 카드 합을 연습하세요.</div><div class="cards" id="bcards"></div><div class="controls"><button class="btn" id="deal" onclick="dealBJ()">Deal</button><button class="btn secondary" id="hit" onclick="hitBJ()" disabled>Hit</button><button class="btn secondary" id="stand" onclick="standBJ()" disabled>Stand</button></div><div class="rules">21을 넘지 않도록 연습합니다. 코인 변동은 없습니다.</div>';
+ window.bj={active:false,player:[]};
 }
 const deckRanks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-function card(){return deckRanks[Math.floor(Math.random()*deckRanks.length)];}
-function val(cards){let s=0,a=0;cards.forEach(c=>{if(c==='A'){s+=11;a++}else s+=isNaN(+c)?10:+c});while(s>21&&a){s-=10;a--}return s;}
-function renderBJ(){document.getElementById('bcards').innerHTML=`<div><b>You</b><div class="cards">${bj.player.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div><div><b>Dealer</b><div class="cards">${bj.dealer.map(x=>`<div class="playcard">${x}</div>`).join('')}</div></div>`;}
-async function dealBJ(){if(bj.active){document.getElementById('bmsg').textContent='현재 게임을 먼저 마쳐주세요.';return}let bet=+document.getElementById('bet').value;if(!await spend(bet))return;bj={active:true,bet,player:[card(),card()],dealer:[card(),card()]};renderBJ();document.getElementById('hit').disabled=false;document.getElementById('stand').disabled=false;document.getElementById('bmsg').textContent='카드를 선택하세요';document.getElementById('deal').disabled=true;if(val(bj.player)===21)standBJ();}
-function hitBJ(){if(!bj.active)return;bj.player.push(card());renderBJ();if(val(bj.player)>21)finishBJ(false);}
-function standBJ(){if(!bj.active)return;while(val(bj.dealer)<17)bj.dealer.push(card());renderBJ();const pv=val(bj.player),dv=val(bj.dealer);finishBJ(pv===dv?'push':pv<=21&&(dv>21||pv>dv));}
-function finishBJ(win){if(!bj.active)return;bj.active=false;let pv=val(bj.player),dv=val(bj.dealer);let msg=pv>21?'💥 Bust!':win==='push'?`🤝 무승부 · 베팅 ${bj.bet} 환불`:win?`🎉 승리! +${bj.bet*2}`:'😢 패배!';if(win==='push'){add(bj.bet);}else if(pv===21&&bj.player.length===2){add(Math.floor(bj.bet*2.5));msg=`🃏 Blackjack! +${bj.bet*2.5}`;}else if(win)add(bj.bet*2);document.getElementById('deal').disabled=false;document.getElementById('bmsg').textContent=`${msg} (You ${pv} / Dealer ${dv})`;document.getElementById('hit').disabled=true;document.getElementById('stand').disabled=true;}
-
-function dice(el){
- el.innerHTML=`<div class="status" id="dmsg">두 주사위의 합을 맞혀보세요</div>${betBox(10)}<div class="choice"><button onclick="rollDice('low')">1~6 ×2</button><button onclick="rollDice('high')">8~12 ×2</button><button onclick="rollDice('seven')">7 ×5</button></div>`;
-}
-async function rollDice(c){let bet=+document.getElementById('bet').value;if(!await spend(bet))return;let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6),s=a+b,win=c==='low'?s<=6:c==='high'?s>=8:s===7;let mult=c==='seven'?5:2;if(win)add(bet*mult);document.getElementById('dmsg').textContent=`🎲 ${a} + ${b} = ${s} — ${win?'🎉 +'+bet*mult:'😢 -'+bet}`;}
-
-function coin(el){el.innerHTML=`<div class="status" id="cmsg">앞면 또는 뒷면을 고르세요</div>${betBox(10)}<div class="choice"><button onclick="flipCoin('앞면')">☀️ 앞면 ×2</button><button onclick="flipCoin('뒷면')">🌙 뒷면 ×2</button></div>`;}
-async function flipCoin(c){let bet=+document.getElementById('bet').value;if(!await spend(bet))return;let r=Math.random()<.5?'앞면':'뒷면',win=r===c;if(win)add(bet*2);document.getElementById('cmsg').textContent=`🪙 ${r}! ${win?'🎉 +'+bet*2:'😢 -'+bet}`;}
-
-function highlow(el){el.innerHTML=`<div class="status" id="hmsg">첫 카드: ?</div><div class="cards"><div class="playcard" id="hcard">?</div></div>${betBox(10)}<div class="choice"><button onclick="playHL('high')">⬆️ Higher ×2</button><button onclick="playHL('low')">⬇️ Lower ×2</button></div><div class="rules">다음 카드가 현재 카드보다 높은지 낮은지 맞혀보세요.</div>`;window.hl=2+Math.floor(Math.random()*12);document.getElementById('hcard').textContent=deckRanks[hl-2]||'A';}
-async function playHL(c){let bet=+document.getElementById('bet').value;if(!await spend(bet))return;let n=2+Math.floor(Math.random()*12),win=c==='high'?n>hl:n<hl;document.getElementById('hmsg').textContent=`${hl} → ${n} — ${win?'🎉 +'+bet*2:'😢 -'+bet}`;if(win)add(bet*2);hl=n;document.getElementById('hcard').textContent=deckRanks[hl-2]||'A';}
-
-function jackpot(el){el.innerHTML=`<div class="status" id="jmsg">3개의 슬롯을 맞혀보세요!</div>${betBox(10)}<div class="cards" id="slots"><div class="playcard">🍒</div><div class="playcard">🍋</div><div class="playcard">⭐</div></div><div class="controls"><button class="btn" onclick="spinJackpot()">SPIN</button></div><div class="rules">3개 일치: 10배 · 2개 일치: 3배 · 모두 다름: 꽝</div>`;}
-async function spinJackpot(){let bet=+document.getElementById('bet').value;if(!await spend(bet))return;let s=['🍒','🍋','⭐','7️⃣','💎'],a=[0,1,2].map(()=>s[Math.floor(Math.random()*s.length)]);document.getElementById('slots').innerHTML=a.map(x=>`<div class="playcard">${x}</div>`).join('');let same=a[0]===a[1]&&a[1]===a[2],pair=new Set(a).size===2;if(same)add(bet*10);else if(pair)add(bet*3);document.getElementById('jmsg').textContent=same?`🎰 JACKPOT! +${bet*10}`:pair?`✨ 2개 일치! +${bet*3}`:`😢 꽝! -${bet}`;}
+function card(){return deckRanks[Math.floor(Math.random()*deckRanks.length)]}
+function val(cards){let s=0,a=0;cards.forEach(c=>{if(c==='A'){s+=11;a++}else s+=isNaN(+c)?10:+c});while(s>21&&a){s-=10;a--}return s}
+function renderBJ(){document.getElementById('bcards').innerHTML=bj.player.map(x=>'<div class="playcard">'+x+'</div>').join('');document.getElementById('bmsg').textContent='현재 합: '+val(bj.player)}
+function dealBJ(){if(bj.active)return;bj={active:true,player:[card(),card()]};renderBJ();document.getElementById('deal').disabled=true;document.getElementById('hit').disabled=false;document.getElementById('stand').disabled=false;if(val(bj.player)===21)standBJ()}
+function hitBJ(){if(!bj.active)return;bj.player.push(card());renderBJ();if(val(bj.player)>=21)standBJ()}
+function standBJ(){if(!bj.active)return;bj.active=false;document.getElementById('bmsg').textContent='연습 종료 · 카드 합 '+val(bj.player);document.getElementById('deal').disabled=false;document.getElementById('hit').disabled=true;document.getElementById('stand').disabled=true}
+function dice(el){el.innerHTML='<div class="status" id="dmsg">두 주사위의 합을 관찰하세요.</div><button class="btn" onclick="rollDice()">굴리기</button>'}
+function rollDice(){let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);document.getElementById('dmsg').textContent=a+' + '+b+' = '+(a+b)}
+function coin(el){el.innerHTML='<div class="status" id="cmsg">동전의 두 가지 결과를 관찰하세요.</div><button class="btn" onclick="flipCoin()">뒤집기</button>'}
+function flipCoin(){document.getElementById('cmsg').textContent=Math.random()<.5?'앞면':'뒷면'}
+function highlow(el){el.innerHTML='<div class="status" id="hmsg">두 카드의 크기를 비교하세요.</div><button class="btn" onclick="playHL()">카드 비교</button>'}
+function playHL(){const a=1+Math.floor(Math.random()*13),b=1+Math.floor(Math.random()*13);document.getElementById('hmsg').textContent=a+' → '+b+' · '+(a===b?'같음':a<b?'높아짐':'낮아짐')}
+function jackpot(el){el.innerHTML='<div class="status" id="jmsg">세 기호의 일치 여부를 관찰하세요.</div><div class="cards" id="slots"></div><button class="btn" onclick="spinJackpot()">기호 보기</button>'}
+function spinJackpot(){const symbols=['🍒','🍋','⭐','7️⃣','💎'],a=Array.from({length:3},()=>symbols[Math.floor(Math.random()*symbols.length)]);document.getElementById('slots').textContent=a.join(' ');document.getElementById('jmsg').textContent='서로 다른 기호 '+new Set(a).size+'개'}
